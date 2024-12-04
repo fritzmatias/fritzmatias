@@ -58,10 +58,10 @@ But the direct way i found to do that is using `sed`, to modify `/etc/passwd` an
    So, i need to map inside the container uid=999 to uid=1000 & gid=999 to gid=100, because the host inodes are going to have those values at mount point.
 
    ```sh
-   $ docker run  -v /media/files/matias/tests/kind/data/postgres/:/var/lib/postgresql/data postgres /bin/bash -c "sed -e 's/999/1000/g' /etc/passwd|grep postgres"
+   $ docker run  -v /media/ntfsRoot/postgres/data:/var/lib/postgresql/data:/var/lib/postgresql/data postgres /bin/bash -c "sed -e 's/999/1000/g' /etc/passwd|grep postgres"
    postgres:x:1000:1000::/var/lib/postgresql:/bin/bash
 
-   $ docker run  -v /media/files/matias/tests/kind/data/postgres/:/var/lib/postgresql/data postgres /bin/bash -c "sed -e 's/999/100/g' /etc/group|grep postgres"
+   $ docker run  -v /media/ntfsRoot/postgres/data:/var/lib/postgresql/data:/var/lib/postgresql/data postgres /bin/bash -c "sed -e 's/999/100/g' /etc/group|grep postgres"
    postgres:x:100:
    ```
 
@@ -72,7 +72,7 @@ But the direct way i found to do that is using `sed`, to modify `/etc/passwd` an
    As the entrypoint & cmd are complementary, we can re use those values from [Postgres Dockerfile](https://github.com/docker-library/postgres/blob/0b87a9bbd23f56b1e9e863ecda5cc9e66416c4e0/17/bookworm/Dockerfile) and contatenate them as one call `docker-entrypoint.sh postgres`.
 
    ```sh
-   $ docker run  -v /media/files/matias/tests/kind/data/postgres/:/var/lib/postgresql/data -e POSTGRES_PASSWORD=password postgres /bin/bash -c "sed -i -e 's/999/1000/g' /etc/passwd;sed -i -e 's/999/100/g' /etc/group;docker-entrypoint.sh postgres"
+   $ docker run  -v /media/ntfsRoot/postgres/data:/var/lib/postgresql/data -e POSTGRES_PASSWORD=password postgres /bin/bash -c "sed -i -e 's/999/1000/g' /etc/passwd;sed -i -e 's/999/100/g' /etc/group;docker-entrypoint.sh postgres"
    ```
 
 5. Tests
@@ -101,6 +101,30 @@ But the direct way i found to do that is using `sed`, to modify `/etc/passwd` an
    1000  449699  0.0  0.0 222628  8612 ?        Ss   14:40   0:00      \_ postgres: autovacuum launcher 
    1000  449700  0.0  0.0 222636  8084 ?        Ss   14:40   0:00      \_ postgres: logical replication launcher 
 
+   ```
+
+6. (Optional) Set docker-compose.yaml
+
+   ```yaml
+   #docker-compose.yaml
+   services:
+      postgres:
+         image: postgres
+         entrypoint: ["/bin/bash"]
+         command: [
+            "-c", 
+            "sed -i -e 's/999/1000/g' /etc/passwd;
+            sed -i -e 's/999/100/g' /etc/group;
+            docker-entrypoint.sh postgres"
+            ]
+         environment:
+            - POSTGRES_PASSWORD=password
+         volumes:
+            - /media/ntfsRoot/postgres/data:/var/lib/postgresql/data
+   ```
+
+   ```sh
+   docker compose -f docker-compose.yaml up postgres
    ```
 
 ## references 
