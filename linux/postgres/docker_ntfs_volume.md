@@ -28,11 +28,11 @@ This guide will walk you through the process of setting up a Dockerized PostgreS
    uid=1000(ntfsRoot) gid=1000(ntfsRoot) groups=1000(ntfsroot)
    ```
 
-   a. if you get full access permission on the ntfs root file system, [postgres initdb](initdb) will fail to start because postgres requires `data` folder to have rigths 750, owned by postgres user and group. So it is required to change that at mounting time. Add to `/etc/fstab` file, [ntfs options](https://manpages.debian.org/bookworm/mount/mount.8.en.html#Mount_options_for_ntfs) `rw,permissions, fmask=137,dmask=037`.
+   a. if you get full access permission on the ntfs root file system, [postgres initdb](initdb) will fail to start because postgres requires `data` folder and files to have rigths 750, owned by postgres user and group. So it is required to change that at mounting time. Add to `/etc/fstab` file, [ntfs options](https://manpages.debian.org/bookworm/mount/mount.8.en.html#Mount_options_for_ntfs) `rw,permissions, fmask=037,dmask=037`.
 
    ```text
    # /etc/fstab
-   UUID=YourUUID /media/ntfsRoot     ntfs  rw,auto,user,permissions,fmask=137,dmask=037,uid=1000,gid=100,errors=remount-ro 0
+   UUID=YourUUID /media/ntfsRoot     ntfs  rw,auto,user,permissions,fmask=027,dmask=027,exec,uid=1000,gid=100,errors=remount-ro 0
    ```
 
    After remount, or reboot your system. You should see the postgres expected output.
